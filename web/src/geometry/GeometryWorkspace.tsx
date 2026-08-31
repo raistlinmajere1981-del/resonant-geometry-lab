@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { planeDistance, pixelToPlane, planeToPixel } from '../core/coordinates'
 import type { CirclePrimitive, PlanePoint, RglProject } from '../core/model'
+import { Icon } from '../ui/Icon'
 
 type GeometryTool = 'select' | 'circle' | 'pan'
 
@@ -54,6 +55,7 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [panDrag, setPanDrag] = useState<PanDrag | null>(null)
+  const [sourceInfoOpen, setSourceInfoOpen] = useState(false)
   const svgRef = useRef<SVGSVGElement | null>(null)
 
   const source = project.sourceImage
@@ -125,6 +127,7 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
       setDraftCircle(null)
       setZoom(1)
       setPan({ x: 0, y: 0 })
+      setSourceInfoOpen(false)
     }
     image.onerror = () => URL.revokeObjectURL(objectUrl)
     image.src = objectUrl
@@ -270,6 +273,13 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
   const sourcePlane = source ? { width: 1, height: source.height / source.width } : null
   const selectedCenterPixels = source && selectedCircle ? planeToPixel(selectedCircle.center, source.width) : null
 
+  const toolHelp =
+    tool === 'select'
+      ? 'Select a circle, drag it to move, or drag its radius handle.'
+      : tool === 'circle'
+        ? 'Drag from a circle center outward. Creation returns to Select.'
+        : 'Drag the viewport. Mouse wheel controls zoom.'
+
   return (
     <>
       <section className="viewport geometry-viewport" aria-label="Geometry viewport">
@@ -279,7 +289,8 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
             <h2>Start with a source image</h2>
             <p>The image is only a visual source. Geometry is stored in a resolution-independent source plane.</p>
             <label className="primary-action">
-              Load image
+              <Icon name="open" size={17} />
+              <span>Load image</span>
               <input
                 accept="image/png,image/jpeg,image/webp"
                 onChange={(event) => handleImage(event.target.files?.[0])}
@@ -343,9 +354,41 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
                 />
               )}
             </svg>
-            <div className="viewport-hud">
+
+            <div className="viewport-toolbar" aria-label="Source and view controls">
+              <label className="icon-button" aria-label="Replace source image" title="Replace source image">
+                <Icon name="open" />
+                <input
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(event) => handleImage(event.target.files?.[0])}
+                  type="file"
+                />
+              </label>
+              <button
+                aria-label="Source information"
+                className={sourceInfoOpen ? 'icon-button active' : 'icon-button'}
+                onClick={() => setSourceInfoOpen((value) => !value)}
+                title="Source information"
+                type="button"
+              >
+                <Icon name="info" />
+              </button>
+              <span className="toolbar-separator" />
+              <button aria-label="Fit image" className="icon-button" onClick={resetView} title="Fit image" type="button">
+                <Icon name="fit" />
+              </button>
+
+              {sourceInfoOpen && (
+                <div className="source-popover">
+                  <strong>{source.name}</strong>
+                  <span>{source.width} × {source.height}px</span>
+                  <span>Plane 1.0000 × {sourcePlane?.height.toFixed(4)}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="viewport-hud" aria-label="Viewport zoom">
               <span>{Math.round(zoom * 100)}%</span>
-              <button onClick={resetView} type="button">Fit</button>
             </div>
           </div>
         )}
@@ -358,46 +401,51 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
         </div>
 
         <section className="context-section">
-          <h3>Source</h3>
-          {source ? (
-            <div className="source-summary">
-              <strong>{source.name}</strong>
-              <span>{source.width} × {source.height}px</span>
-              <span>Plane 1.0000 × {sourcePlane?.height.toFixed(4)}</span>
-              <label className="secondary-action">
-                Replace image
-                <input
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={(event) => handleImage(event.target.files?.[0])}
-                  type="file"
-                />
-              </label>
-            </div>
-          ) : (
-            <p>No source image loaded.</p>
-          )}
-        </section>
-
-        <section className="context-section">
           <h3>Tools</h3>
-          <div className="tool-grid" role="group" aria-label="Geometry tools">
-            {(['select', 'circle', 'pan'] as GeometryTool[]).map((item) => (
-              <button
-                className={tool === item ? 'tool-button active' : 'tool-button'}
-                disabled={!source}
-                key={item}
-                onClick={() => setTool(item)}
-                type="button"
-              >
-                {item === 'select' ? 'Select' : item === 'circle' ? 'Circle' : 'Pan'}
-              </button>
-            ))}
+          <div className="tool-groups">
+            <div className="tool-group">
+              <span className="tool-group-label">Navigate</span>
+              <div className="icon-button-row" role="group" aria-label="Navigation tools">
+                <button
+                  aria-label="Select"
+                  className={tool === 'select' ? 'icon-button active' : 'icon-button'}
+                  disabled={!source}
+                  onClick={() => setTool('select')}
+                  title="Select"
+                  type="button"
+                >
+                  <Icon name="select" />
+                </button>
+                <button
+                  aria-label="Pan"
+                  className={tool === 'pan' ? 'icon-button active' : 'icon-button'}
+                  disabled={!source}
+                  onClick={() => setTool('pan')}
+                  title="Pan"
+                  type="button"
+                >
+                  <Icon name="pan" />
+                </button>
+              </div>
+            </div>
+
+            <div className="tool-group">
+              <span className="tool-group-label">Create</span>
+              <div className="icon-button-row" role="group" aria-label="Creation tools">
+                <button
+                  aria-label="Circle"
+                  className={tool === 'circle' ? 'icon-button active' : 'icon-button'}
+                  disabled={!source}
+                  onClick={() => setTool('circle')}
+                  title="Circle"
+                  type="button"
+                >
+                  <Icon name="circle" />
+                </button>
+              </div>
+            </div>
           </div>
-          <p className="tool-help">
-            {tool === 'select' && 'Select a circle, drag it to move, or drag its right handle to change radius.'}
-            {tool === 'circle' && 'Drag from a circle center outward. The tool returns to Select after creation.'}
-            {tool === 'pan' && 'Drag the viewport. Mouse wheel controls zoom.'}
-          </p>
+          <p className="tool-help">{toolHelp}</p>
         </section>
 
         <section className="context-section">
@@ -411,16 +459,21 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
               <div><span>Diameter</span><strong>{(selectedCircle.radius * 2).toFixed(5)}</strong></div>
               <div><span>Center px</span><strong>{selectedCenterPixels.x.toFixed(1)}, {selectedCenterPixels.y.toFixed(1)}</strong></div>
               <div><span>Radius px</span><strong>{(selectedCircle.radius * source.width).toFixed(1)}</strong></div>
-              <button className="danger-action" onClick={removeSelected} type="button">Delete circle</button>
+              <div className="selection-actions">
+                <button
+                  aria-label="Delete circle"
+                  className="icon-button danger"
+                  onClick={removeSelected}
+                  title="Delete circle"
+                  type="button"
+                >
+                  <Icon name="trash" />
+                </button>
+              </div>
             </div>
           ) : (
             <p>No circle selected.</p>
           )}
-        </section>
-
-        <section className="context-section muted-section">
-          <h3>Checkpoint boundary</h3>
-          <p>Manual circles only. Automatic detection, perspective correction and structural interpretation stay out until the editor itself is comfortable.</p>
         </section>
       </aside>
     </>
