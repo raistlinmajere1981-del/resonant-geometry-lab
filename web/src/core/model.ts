@@ -1,4 +1,4 @@
-export type NormalizedPoint = {
+export type PlanePoint = {
   x: number
   y: number
 }
@@ -24,18 +24,18 @@ export type PrimitiveBase = {
 
 export type PointPrimitive = PrimitiveBase & {
   kind: 'point'
-  position: NormalizedPoint
+  position: PlanePoint
 }
 
 export type CirclePrimitive = PrimitiveBase & {
   kind: 'circle'
-  center: NormalizedPoint
+  center: PlanePoint
   radius: number
 }
 
 export type EllipsePrimitive = PrimitiveBase & {
   kind: 'ellipse'
-  center: NormalizedPoint
+  center: PlanePoint
   radiusX: number
   radiusY: number
   rotationDegrees: number
@@ -43,13 +43,13 @@ export type EllipsePrimitive = PrimitiveBase & {
 
 export type LinePrimitive = PrimitiveBase & {
   kind: 'line'
-  start: NormalizedPoint
-  end: NormalizedPoint
+  start: PlanePoint
+  end: PlanePoint
 }
 
 export type ArcPrimitive = PrimitiveBase & {
   kind: 'arc'
-  center: NormalizedPoint
+  center: PlanePoint
   radius: number
   startDegrees: number
   endDegrees: number
@@ -57,17 +57,17 @@ export type ArcPrimitive = PrimitiveBase & {
 
 export type PolylinePrimitive = PrimitiveBase & {
   kind: 'polyline'
-  points: NormalizedPoint[]
+  points: PlanePoint[]
 }
 
 export type PolygonPrimitive = PrimitiveBase & {
   kind: 'polygon'
-  points: NormalizedPoint[]
+  points: PlanePoint[]
 }
 
 export type RegionPrimitive = PrimitiveBase & {
   kind: 'region'
-  points: NormalizedPoint[]
+  points: PlanePoint[]
   role?: 'occupied' | 'empty' | 'mask' | 'reference'
 }
 
@@ -89,7 +89,7 @@ export type SourceImage = {
 }
 
 export type GeometryDocument = {
-  origin?: NormalizedPoint
+  origin?: PlanePoint
   primitives: GeometryPrimitive[]
 }
 
