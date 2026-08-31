@@ -10,6 +10,7 @@ import {
 import { planeDistance, pixelToPlane, planeToPixel } from '../core/coordinates'
 import type { CirclePrimitive, PlanePoint, RglProject } from '../core/model'
 import { Icon } from '../ui/Icon'
+import { PanelHelp } from '../ui/PanelHelp'
 
 type GeometryTool = 'select' | 'circle' | 'pan'
 
@@ -397,7 +398,12 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
       <aside className="context-panel">
         <div className="panel-heading">
           <span className="eyebrow">Context</span>
-          <h2>Geometry</h2>
+          <div className="panel-title-row">
+            <h2>Geometry</h2>
+            <PanelHelp label="Geometry panel help">
+              {toolHelp} Selection measurements appear below.
+            </PanelHelp>
+          </div>
         </div>
 
         <section className="context-section">
@@ -445,7 +451,6 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
               </div>
             </div>
           </div>
-          <p className="tool-help">{toolHelp}</p>
         </section>
 
         <section className="context-section">
