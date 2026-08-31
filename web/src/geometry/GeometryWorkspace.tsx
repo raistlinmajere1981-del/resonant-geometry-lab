@@ -3,6 +3,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type SetStateAction,
   type WheelEvent as ReactWheelEvent,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -44,11 +45,26 @@ type PanDrag = {
 type GeometryWorkspaceProps = {
   project: RglProject
   setProject: Dispatch<SetStateAction<RglProject>>
+  replaceProject: Dispatch<SetStateAction<RglProject>>
+  beginProjectTransaction: () => void
+  commitProjectTransaction: () => void
+  cancelProjectTransaction: () => void
+  sourceUrl?: string
+  onSourceAttached: (assetId: string, objectUrl: string) => void
 }
 
 const clampZoom = (value: number) => Math.min(8, Math.max(0.25, value))
 
-export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProps) {
+export function GeometryWorkspace({
+  project,
+  setProject,
+  replaceProject,
+  beginProjectTransaction,
+  commitProjectTransaction,
+  cancelProjectTransaction,
+  sourceUrl,
+  onSourceAttached,
+}: GeometryWorkspaceProps) {
   const [tool, setTool] = useState<GeometryTool>('select')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [draftCircle, setDraftCircle] = useState<DraftCircle | null>(null)
@@ -57,6 +73,7 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [panDrag, setPanDrag] = useState<PanDrag | null>(null)
   const [sourceInfoOpen, setSourceInfoOpen] = useState(false)
+  const [sourceError, setSourceError] = useState<string | null>(null)
   const svgRef = useRef<SVGSVGElement | null>(null)
 
   const source = project.sourceImage
@@ -66,8 +83,20 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
   )
   const selectedCircle = circles.find((circle) => circle.id === selectedId) ?? null
 
+  useEffect(() => {
+    setTool('select')
+    setSelectedId(null)
+    setDraftCircle(null)
+    setCircleDrag(null)
+    setPanDrag(null)
+    setZoom(1)
+    setPan({ x: 0, y: 0 })
+    setSourceInfoOpen(false)
+    setSourceError(null)
+  }, [project.id])
+
   const updateCircle = (circleId: string, updater: (circle: CirclePrimitive) => CirclePrimitive) => {
-    setProject((current) => ({
+    replaceProject((current) => ({
       ...current,
       geometry: {
         ...current.geometry,
@@ -91,7 +120,7 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
   }
 
   const eventToPlane = (event: ReactPointerEvent<SVGSVGElement>): PlanePoint | null => {
-    if (!source || !svgRef.current) return null
+    if (!source || !sourceUrl || !svgRef.current) return null
     const matrix = svgRef.current.getScreenCTM()
     if (!matrix) return null
 
@@ -102,40 +131,64 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
     return pixelToPlane({ x: point.x, y: point.y }, source.width)
   }
 
+  const resetView = () => {
+    setZoom(1)
+    setPan({ x: 0, y: 0 })
+  }
+
   const handleImage = (file: File | undefined) => {
     if (!file) return
+
+    const reconnecting = Boolean(source && !sourceUrl)
     const objectUrl = URL.createObjectURL(file)
     const image = new Image()
+
     image.onload = () => {
-      setProject((current) => {
-        if (current.sourceImage?.objectUrl) URL.revokeObjectURL(current.sourceImage.objectUrl)
-        return {
-          ...current,
-          name: file.name,
-          sourceImage: {
-            name: file.name,
-            width: image.naturalWidth,
-            height: image.naturalHeight,
-            objectUrl,
-          },
-          geometry: {
-            ...current.geometry,
-            primitives: [],
-          },
+      if (reconnecting && source) {
+        if (image.naturalWidth !== source.width || image.naturalHeight !== source.height) {
+          URL.revokeObjectURL(objectUrl)
+          setSourceError(`Expected ${source.width} × ${source.height}px; selected image is ${image.naturalWidth} × ${image.naturalHeight}px.`)
+          return
         }
-      })
+
+        onSourceAttached(source.assetId, objectUrl)
+        setSourceError(null)
+        resetView()
+        return
+      }
+
+      const assetId = crypto.randomUUID()
+      setProject((current) => ({
+        ...current,
+        name: file.name,
+        sourceImage: {
+          assetId,
+          name: file.name,
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        },
+        geometry: {
+          ...current.geometry,
+          primitives: [],
+        },
+      }))
+      onSourceAttached(assetId, objectUrl)
       setSelectedId(null)
       setDraftCircle(null)
-      setZoom(1)
-      setPan({ x: 0, y: 0 })
+      setSourceError(null)
+      resetView()
       setSourceInfoOpen(false)
     }
-    image.onerror = () => URL.revokeObjectURL(objectUrl)
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      setSourceError('The selected image could not be opened.')
+    }
     image.src = objectUrl
   }
 
   const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!source) return
+    if (!source || !sourceUrl) return
 
     if (tool === 'pan') {
       svgRef.current?.setPointerCapture(event.pointerId)
@@ -163,7 +216,7 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
   }
 
   const handlePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!source) return
+    if (!source || !sourceUrl) return
 
     if (panDrag && panDrag.pointerId === event.pointerId) {
       setPan({
@@ -228,20 +281,36 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
       setDraftCircle(null)
     }
 
-    if (circleDrag?.pointerId === event.pointerId) setCircleDrag(null)
+    if (circleDrag?.pointerId === event.pointerId) {
+      setCircleDrag(null)
+      commitProjectTransaction()
+    }
+    if (svgRef.current?.hasPointerCapture(event.pointerId)) {
+      svgRef.current.releasePointerCapture(event.pointerId)
+    }
+  }
+
+  const handlePointerCancel = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (panDrag?.pointerId === event.pointerId) setPanDrag(null)
+    if (draftCircle) setDraftCircle(null)
+    if (circleDrag?.pointerId === event.pointerId) {
+      setCircleDrag(null)
+      cancelProjectTransaction()
+    }
     if (svgRef.current?.hasPointerCapture(event.pointerId)) {
       svgRef.current.releasePointerCapture(event.pointerId)
     }
   }
 
   const beginCircleMove = (event: ReactPointerEvent<SVGCircleElement>, circle: CirclePrimitive) => {
-    if (tool !== 'select' || circle.locked || !source || !svgRef.current) return
+    if (tool !== 'select' || circle.locked || !source || !sourceUrl || !svgRef.current) return
     event.stopPropagation()
     setSelectedId(circle.id)
     const matrix = svgRef.current.getScreenCTM()
     if (!matrix) return
     const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse())
     svgRef.current.setPointerCapture(event.pointerId)
+    beginProjectTransaction()
     setCircleDrag({
       mode: 'move',
       pointerId: event.pointerId,
@@ -252,23 +321,19 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
   }
 
   const beginRadiusDrag = (event: ReactPointerEvent<SVGCircleElement>, circle: CirclePrimitive) => {
-    if (tool !== 'select' || circle.locked || !svgRef.current) return
+    if (tool !== 'select' || circle.locked || !sourceUrl || !svgRef.current) return
     event.stopPropagation()
     setSelectedId(circle.id)
     svgRef.current.setPointerCapture(event.pointerId)
+    beginProjectTransaction()
     setCircleDrag({ mode: 'radius', pointerId: event.pointerId, circleId: circle.id })
   }
 
   const handleWheel = (event: ReactWheelEvent<SVGSVGElement>) => {
-    if (!source) return
+    if (!source || !sourceUrl) return
     event.preventDefault()
     const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12
     setZoom((value) => clampZoom(value * factor))
-  }
-
-  const resetView = () => {
-    setZoom(1)
-    setPan({ x: 0, y: 0 })
   }
 
   const sourcePlane = source ? { width: 1, height: source.height / source.width } : null
@@ -281,6 +346,21 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
         ? 'Drag from a circle center outward. Creation returns to Select.'
         : 'Drag the viewport. Mouse wheel controls zoom.'
 
+  const imageInput = (label: string) => (
+    <label className="primary-action">
+      <Icon name="open" size={17} />
+      <span>{label}</span>
+      <input
+        accept="image/png,image/jpeg,image/webp"
+        onChange={(event) => {
+          handleImage(event.target.files?.[0])
+          event.currentTarget.value = ''
+        }}
+        type="file"
+      />
+    </label>
+  )
+
   return (
     <>
       <section className="viewport geometry-viewport" aria-label="Geometry viewport">
@@ -289,15 +369,18 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
             <span className="eyebrow">Geometry workspace</span>
             <h2>Start with a source image</h2>
             <p>The image is only a visual source. Geometry is stored in a resolution-independent source plane.</p>
-            <label className="primary-action">
-              <Icon name="open" size={17} />
-              <span>Load image</span>
-              <input
-                accept="image/png,image/jpeg,image/webp"
-                onChange={(event) => handleImage(event.target.files?.[0])}
-                type="file"
-              />
-            </label>
+            {imageInput('Load image')}
+            {sourceError && <p className="source-attach-error" role="alert">{sourceError}</p>}
+          </div>
+        ) : !sourceUrl ? (
+          <div className="viewport-placeholder geometry-empty-state">
+            <span className="eyebrow">Source disconnected</span>
+            <h2>Reconnect source image</h2>
+            <p>
+              Expected {source.name} · {source.width} × {source.height}px. Project geometry is loaded; attach the matching image to continue editing.
+            </p>
+            {imageInput('Attach image')}
+            {sourceError && <p className="source-attach-error" role="alert">{sourceError}</p>}
           </div>
         ) : (
           <div className="geometry-stage-shell">
@@ -306,14 +389,14 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
+              onPointerCancel={handlePointerCancel}
               onWheel={handleWheel}
               preserveAspectRatio="xMidYMid meet"
               ref={svgRef}
               style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
               viewBox={`0 0 ${source.width} ${source.height}`}
             >
-              <image href={source.objectUrl} height={source.height} width={source.width} x={0} y={0} />
+              <image href={sourceUrl} height={source.height} width={source.width} x={0} y={0} />
 
               {circles.map((circle) => {
                 if (circle.hidden) return null
@@ -361,7 +444,10 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
                 <Icon name="open" />
                 <input
                   accept="image/png,image/jpeg,image/webp"
-                  onChange={(event) => handleImage(event.target.files?.[0])}
+                  onChange={(event) => {
+                    handleImage(event.target.files?.[0])
+                    event.currentTarget.value = ''
+                  }}
                   type="file"
                 />
               </label>
@@ -415,7 +501,7 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
                 <button
                   aria-label="Select"
                   className={tool === 'select' ? 'icon-button active' : 'icon-button'}
-                  disabled={!source}
+                  disabled={!sourceUrl}
                   onClick={() => setTool('select')}
                   title="Select"
                   type="button"
@@ -425,7 +511,7 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
                 <button
                   aria-label="Pan"
                   className={tool === 'pan' ? 'icon-button active' : 'icon-button'}
-                  disabled={!source}
+                  disabled={!sourceUrl}
                   onClick={() => setTool('pan')}
                   title="Pan"
                   type="button"
@@ -441,7 +527,7 @@ export function GeometryWorkspace({ project, setProject }: GeometryWorkspaceProp
                 <button
                   aria-label="Circle"
                   className={tool === 'circle' ? 'icon-button active' : 'icon-button'}
-                  disabled={!source}
+                  disabled={!sourceUrl}
                   onClick={() => setTool('circle')}
                   title="Circle"
                   type="button"

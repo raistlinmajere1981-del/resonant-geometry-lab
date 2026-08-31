@@ -3,6 +3,9 @@ export type IconName =
   | 'circle'
   | 'pan'
   | 'open'
+  | 'save'
+  | 'undo'
+  | 'redo'
   | 'info'
   | 'help'
   | 'fit'
@@ -55,6 +58,28 @@ export function Icon({ name, size = 18 }: IconProps) {
         <svg {...common}>
           <path d="M3.8 7.4h6l1.8 2h8.6" />
           <path d="M4.5 6.2h5l1.7 1.9h7.3a1.5 1.5 0 0 1 1.4 1.9l-2 7.1a1.7 1.7 0 0 1-1.7 1.3H5.8a1.7 1.7 0 0 1-1.7-1.5L3 7.9a1.6 1.6 0 0 1 1.5-1.7Z" />
+        </svg>
+      )
+    case 'save':
+      return (
+        <svg {...common}>
+          <path d="M5 4.5h11.5L19 7v12.5H5Z" />
+          <path d="M8 4.5v5h7v-5" />
+          <path d="M8.5 19.5v-6h7v6" />
+        </svg>
+      )
+    case 'undo':
+      return (
+        <svg {...common}>
+          <path d="M9 7 4.5 11.5 9 16" />
+          <path d="M5 11.5h7.2c4 0 6.3 2.1 6.3 5.3" />
+        </svg>
+      )
+    case 'redo':
+      return (
+        <svg {...common}>
+          <path d="m15 7 4.5 4.5L15 16" />
+          <path d="M19 11.5h-7.2c-4 0-6.3 2.1-6.3 5.3" />
         </svg>
       )
     case 'info':

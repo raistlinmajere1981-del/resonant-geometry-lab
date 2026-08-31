@@ -1,0 +1,31 @@
+.project-controls-shell {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.project-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid #303640;
+  border-radius: 9px;
+  background: #191d23;
+}
+
+.project-control-error {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 40;
+  width: 280px;
+  padding: 9px 10px;
+  border: 1px solid #6d444a;
+  border-radius: 7px;
+  color: #efc0c0;
+  background: rgba(37, 25, 28, 0.98);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  font-size: 11px;
+  line-height: 1.45;
+  transform: translateX(-50%);
+}
