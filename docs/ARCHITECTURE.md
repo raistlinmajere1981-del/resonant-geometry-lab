@@ -6,21 +6,25 @@ RGL is an analysis workbench, not a crop-circle-specific editor. Its central con
 
 The application is split into four concerns:
 
-1. **Project model** — source metadata, normalized geometry and future analysis references.
+1. **Project model** — source metadata, source-plane geometry and future analysis references.
 2. **Workspace shell** — stable application frame and context-sensitive panels.
 3. **View adapters** — 2D image/vector views and later Babylon.js 3D views.
 4. **Analysis engines** — geometry and resonance calculations that do not depend on React components.
 
 ## Coordinate contract
 
-Geometry is stored in normalized image coordinates rather than source pixels.
+Geometry is stored in a resolution-independent, isotropic source plane rather than source pixels.
 
 - `(0, 0)` is the top-left of the source plane.
-- `(1, 1)` is the bottom-right of the source plane.
-- Circle and ellipse radii are normalized against source width for v0.1.
-- Pixel-space values are derived at render time.
+- Source image width is always `1.0` plane unit.
+- Source image height is `imageHeight / imageWidth` plane units.
+- A pixel point `(px, py)` therefore becomes `(px / imageWidth, py / imageWidth)`.
+- Radius and distance use the same plane unit, so Euclidean geometry stays isotropic.
+- Pixel-space values are derived at render time by multiplying plane units by source width.
 
-This lets the same geometric document survive source-resolution changes and allows simulation results to be transformed into the same comparison space.
+For a 4000 × 3000 image the source plane therefore spans `1.0 × 0.75`, not `1.0 × 1.0`. This avoids the hidden x/y scale mismatch that occurs when both axes are independently normalized to `[0, 1]`.
+
+The coordinate contract lets the same geometric document survive source-resolution changes with the same aspect ratio and gives geometry and simulation a common metric space.
 
 Perspective rectification will be represented as a transform rather than by rewriting primitive coordinates in place. That feature belongs to a later Geometry stage, but the model must not block it.
 
