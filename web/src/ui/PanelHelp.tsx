@@ -1,5 +1,6 @@
 import { type ReactNode, useId } from 'react'
 import { Icon } from './Icon'
+import './PanelHelp.css'
 
 type PanelHelpProps = {
   children: ReactNode
