@@ -21,8 +21,13 @@ body,
   margin: 0;
 }
 
-button {
+button,
+input {
   font: inherit;
+}
+
+button {
+  color: inherit;
 }
 
 .app-shell {
@@ -219,4 +224,248 @@ p {
   color: #788290;
   background: #12151a;
   font-size: 11px;
+}
+
+.geometry-viewport {
+  touch-action: none;
+}
+
+.geometry-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.primary-action,
+.secondary-action,
+.tool-button,
+.danger-action,
+.viewport-hud button {
+  border: 1px solid #3a424e;
+  border-radius: 7px;
+  background: #20252c;
+  cursor: pointer;
+}
+
+.primary-action,
+.secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.primary-action {
+  margin-top: 18px;
+  padding: 10px 14px;
+  color: #f6f8fa;
+  background: #2b3440;
+}
+
+.secondary-action {
+  margin-top: 10px;
+  padding: 7px 9px;
+  color: #c7ced8;
+}
+
+.primary-action input,
+.secondary-action input {
+  display: none;
+}
+
+.geometry-stage-shell {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.geometry-stage {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform-origin: center center;
+  user-select: none;
+}
+
+.geometry-stage.tool-select {
+  cursor: default;
+}
+
+.geometry-stage.tool-circle {
+  cursor: crosshair;
+}
+
+.geometry-stage.tool-pan {
+  cursor: grab;
+}
+
+.geometry-stage.tool-pan:active {
+  cursor: grabbing;
+}
+
+.geometry-stage image {
+  pointer-events: none;
+}
+
+.annotation-circle {
+  fill: rgba(80, 180, 255, 0.08);
+  stroke: #72c5ff;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+  cursor: move;
+}
+
+.annotation-circle:hover {
+  fill: rgba(80, 180, 255, 0.14);
+}
+
+.annotation.selected .annotation-circle {
+  fill: rgba(255, 210, 96, 0.08);
+  stroke: #ffd66b;
+}
+
+.annotation-circle.draft {
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: #f1f4f7;
+  stroke-dasharray: 7 5;
+  pointer-events: none;
+}
+
+.center-handle,
+.radius-handle {
+  fill: #f6f8fa;
+  stroke: #11151a;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.center-handle {
+  pointer-events: none;
+}
+
+.radius-handle {
+  cursor: ew-resize;
+}
+
+.radius-guide {
+  stroke: #ffd66b;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.viewport-hud {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px 5px 9px;
+  border: 1px solid #303640;
+  border-radius: 7px;
+  color: #aeb6c2;
+  background: rgba(17, 20, 25, 0.9);
+  font-size: 11px;
+}
+
+.viewport-hud button {
+  padding: 4px 8px;
+  color: #d7dce3;
+}
+
+.source-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  color: #8f98a6;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.source-summary strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: #d8dde5;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.tool-button {
+  padding: 8px 6px;
+  color: #aab2be;
+  font-size: 11px;
+}
+
+.tool-button:hover:not(:disabled) {
+  border-color: #525d6c;
+  background: #282e36;
+}
+
+.tool-button.active {
+  border-color: #6e7b8e;
+  color: #f5f7f9;
+  background: #313946;
+}
+
+.tool-button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.tool-help {
+  margin-top: 9px;
+}
+
+.measurement-list {
+  display: grid;
+  gap: 7px;
+}
+
+.measurement-list > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #232831;
+}
+
+.measurement-list span {
+  color: #808a98;
+  font-size: 11px;
+}
+
+.measurement-list strong {
+  color: #d8dde4;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.danger-action {
+  margin-top: 5px;
+  padding: 7px 9px;
+  color: #efb1b1;
+  background: #2a2022;
+}
+
+@media (max-width: 1120px) {
+  .workspace-shell {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+
+  .workspace-tab {
+    min-width: 96px;
+  }
 }
