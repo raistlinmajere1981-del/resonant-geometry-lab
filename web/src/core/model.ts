@@ -82,10 +82,10 @@ export type GeometryPrimitive =
   | RegionPrimitive
 
 export type SourceImage = {
+  assetId: string
   name: string
   width: number
   height: number
-  objectUrl?: string
 }
 
 export type GeometryDocument = {
