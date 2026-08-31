@@ -12,7 +12,8 @@ type SourceAttachment = {
 
 export function App() {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceId>('geometry')
-  const history = useProjectHistory(emptyProject())
+  const [initialProject] = useState(() => emptyProject())
+  const history = useProjectHistory(initialProject)
   const [sourceAttachment, setSourceAttachment] = useState<SourceAttachment | null>(null)
   const project = history.project
   const workspace = workspaces.find((item) => item.id === activeWorkspace) ?? workspaces[0]
