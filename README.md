@@ -9,7 +9,7 @@ Resonant Geometry Lab (RGL), geometrik desenleri ölçmek, sayısallaştırmak v
 - **Model UI'den bağımsızdır.** Geometri ve simülasyon verileri görünüm katmanından ayrı tutulur.
 - **2D ve 3D aynı veriyi okur.** Fotoğraf overlay'i, vektör görünümü ve Babylon tabanlı 3D görünüm aynı proje verisinin farklı adaptörleridir.
 - **Yeni yetenekler UI'yi büyütmez.** Analizler ve görünümler bağlama göre açılan araç/panel modülleri olarak eklenir.
-- **Kaynak görüntü yalnızca girdidir.** Ölçümler normalize koordinatlarda saklanır; fotoğraf çözünürlüğüne bağlı kalmaz.
+- **Kaynak görüntü yalnızca girdidir.** Ölçümler çözünürlükten bağımsız, izotropik kaynak-düzlemi koordinatlarında saklanır.
 - **İnsan kontrolü önceliklidir.** Otomatik algılama öneri üretir; manuel düzeltme ve onay esas veri kaynağıdır.
 - **Tek bir desene göre mimari kurulmaz.** Circle, ellipse, point, line, arc, polyline, polygon ve region gibi genel primitive'ler kullanılır.
 - **Karşılaştırma tek puana indirgenmez.** Geometri, simetri, radyal profil, topoloji ve negatif alan gibi bileşenler ayrı raporlanır.
@@ -77,6 +77,22 @@ Geometri/simülasyon hizalama ve çoklu karşılaştırma metrikleri.
 
 Her aşama yerelde test edilip doğrulandıktan sonra bir sonraki aşamaya geçilir.
 
+## Foundation yerel kontrolü
+
+Şimdilik yalnız web kabuğu ve çekirdek veri modeli vardır. Node.js 20+ yeterlidir.
+
+```bash
+npm --prefix web install
+npm run typecheck
+npm test
+npm run build
+npm run dev
+```
+
+Tarayıcıda `http://127.0.0.1:5173` açıldığında Geometry, Resonance ve Compare sekmeleri aynı sabit çalışma kabuğu içinde görünmelidir. Bu aşamada gerçek analiz işlevi beklenmez; amaç temel mimariyi ve UI şablonunu doğrulamaktır.
+
 ## Geliştirme yaklaşımı
 
 Bu depo kişisel araştırma aracı olarak geliştirilir. Dağıtım, hesap sistemi, çok kullanıcılı güvenlik, bulut altyapısı veya ürünleştirme v0.1 hedefi değildir. Öncelik; okunabilirlik, ölçüm güvenilirliği, geri alınabilir çalışma akışı ve gelecekte yeni analiz modülleri eklenebilmesidir.
+
+Ayrıntılı mimari sözleşme için `docs/ARCHITECTURE.md` dosyasına bakın.
