@@ -29,13 +29,16 @@ export type ProjectHistoryController = {
 export function useProjectHistory(initialProject: RglProject): ProjectHistoryController {
   const [history, setHistory] = useState(() => createProjectHistory(initialProject))
 
-  const setProject: Dispatch<SetStateAction<RglProject>> = useCallback((updater) => {
+  const setProject: Dispatch<SetStateAction<RglProject>> = useCallback((updater: SetStateAction<RglProject>) => {
     setHistory((current) => commitProject(current, updater))
   }, [])
 
-  const replaceProjectState: Dispatch<SetStateAction<RglProject>> = useCallback((updater) => {
-    setHistory((current) => replaceProject(current, updater))
-  }, [])
+  const replaceProjectState: Dispatch<SetStateAction<RglProject>> = useCallback(
+    (updater: SetStateAction<RglProject>) => {
+      setHistory((current) => replaceProject(current, updater))
+    },
+    [],
+  )
 
   const beginTransaction = useCallback(() => {
     setHistory((current) => beginProjectTransaction(current))
