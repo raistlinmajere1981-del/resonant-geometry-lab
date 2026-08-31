@@ -1,0 +1,66 @@
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.panel-title-row h2 {
+  margin-top: 0;
+}
+
+.panel-help {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.panel-help-trigger {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: #737e8d;
+  background: transparent;
+  cursor: help;
+}
+
+.panel-help-trigger:hover,
+.panel-help-trigger:focus-visible {
+  border-color: #3e4652;
+  color: #d9dee5;
+  background: #20252c;
+  outline: none;
+}
+
+.panel-help-tooltip {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  z-index: 20;
+  width: 236px;
+  padding: 9px 10px;
+  border: 1px solid #353c47;
+  border-radius: 7px;
+  color: #aab2be;
+  background: rgba(18, 21, 26, 0.98);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  font-size: 11px;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-3px);
+  transition: opacity 120ms ease, transform 120ms ease;
+  visibility: hidden;
+}
+
+.panel-help:hover .panel-help-tooltip,
+.panel-help:focus-within .panel-help-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}

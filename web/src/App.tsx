@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { emptyProject } from './core/model'
 import { type WorkspaceId, workspaces } from './core/workspaces'
+import { GeometryWorkspace } from './geometry/GeometryWorkspace'
 
 export function App() {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceId>('geometry')
-  const project = useMemo(() => emptyProject(), [])
+  const [project, setProject] = useState(() => emptyProject())
   const workspace = workspaces.find((item) => item.id === activeWorkspace) ?? workspaces[0]
 
   return (
@@ -34,42 +35,46 @@ export function App() {
       </header>
 
       <section className="workspace-shell">
-        <section className="viewport" aria-label="Main viewport">
-          <div className="viewport-placeholder">
-            <span className="eyebrow">{workspace.label} workspace</span>
-            <h2>{workspace.shortDescription}</h2>
-            <p>
-              {activeWorkspace === 'geometry' &&
-                'Stage 1 will place the source image and editable 2D geometry overlay here.'}
-              {activeWorkspace === 'resonance' &&
-                'A modal simulation view will plug into this same viewport without changing the shell.'}
-              {activeWorkspace === 'compare' &&
-                'Measured geometry and simulation output will share this viewport for alignment and comparison.'}
-            </p>
-          </div>
-        </section>
+        {activeWorkspace === 'geometry' ? (
+          <GeometryWorkspace project={project} setProject={setProject} />
+        ) : (
+          <>
+            <section className="viewport" aria-label="Main viewport">
+              <div className="viewport-placeholder">
+                <span className="eyebrow">{workspace.label} workspace</span>
+                <h2>{workspace.shortDescription}</h2>
+                <p>
+                  {activeWorkspace === 'resonance' &&
+                    'A modal simulation view will plug into this same viewport without changing the shell.'}
+                  {activeWorkspace === 'compare' &&
+                    'Measured geometry and simulation output will share this viewport for alignment and comparison.'}
+                </p>
+              </div>
+            </section>
 
-        <aside className="context-panel">
-          <div className="panel-heading">
-            <span className="eyebrow">Context</span>
-            <h2>{workspace.label}</h2>
-          </div>
+            <aside className="context-panel">
+              <div className="panel-heading">
+                <span className="eyebrow">Context</span>
+                <h2>{workspace.label}</h2>
+              </div>
 
-          <section className="context-section">
-            <h3>Tools</h3>
-            <p>Only tools relevant to the active workspace will appear here.</p>
-          </section>
+              <section className="context-section">
+                <h3>Tools</h3>
+                <p>Only tools relevant to the active workspace will appear here.</p>
+              </section>
 
-          <section className="context-section">
-            <h3>Selection</h3>
-            <p>No object selected.</p>
-          </section>
+              <section className="context-section">
+                <h3>Selection</h3>
+                <p>No object selected.</p>
+              </section>
 
-          <section className="context-section muted-section">
-            <h3>Foundation rule</h3>
-            <p>The viewport stays stable while workspace-specific panels are swapped around it.</p>
-          </section>
-        </aside>
+              <section className="context-section muted-section">
+                <h3>Foundation rule</h3>
+                <p>The viewport stays stable while workspace-specific panels are swapped around it.</p>
+              </section>
+            </aside>
+          </>
+        )}
       </section>
 
       <footer className="statusbar">
