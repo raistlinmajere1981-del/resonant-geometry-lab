@@ -1,12 +1,58 @@
-import { useState } from 'react'
-import { emptyProject } from './core/model'
+import { useEffect, useState } from 'react'
+import { emptyProject, type RglProject } from './core/model'
+import { useProjectHistory } from './core/useProjectHistory'
 import { type WorkspaceId, workspaces } from './core/workspaces'
 import { GeometryWorkspace } from './geometry/GeometryWorkspace'
+import { ProjectControls } from './ui/ProjectControls'
+
+type SourceAttachment = {
+  assetId: string
+  objectUrl: string
+}
 
 export function App() {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceId>('geometry')
-  const [project, setProject] = useState(() => emptyProject())
+  const history = useProjectHistory(emptyProject())
+  const [sourceAttachment, setSourceAttachment] = useState<SourceAttachment | null>(null)
+  const project = history.project
   const workspace = workspaces.find((item) => item.id === activeWorkspace) ?? workspaces[0]
+  const sourceUrl =
+    project.sourceImage && sourceAttachment?.assetId === project.sourceImage.assetId
+      ? sourceAttachment.objectUrl
+      : undefined
+
+  useEffect(() => {
+    return () => {
+      if (sourceAttachment) URL.revokeObjectURL(sourceAttachment.objectUrl)
+    }
+  }, [sourceAttachment])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey) return
+      const target = event.target as HTMLElement | null
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return
+
+      const key = event.key.toLowerCase()
+      if (key === 'z') {
+        event.preventDefault()
+        if (event.shiftKey) history.redo()
+        else history.undo()
+      } else if (key === 'y') {
+        event.preventDefault()
+        history.redo()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [history.redo, history.undo])
+
+  const openProject = (nextProject: RglProject) => {
+    history.reset(nextProject)
+    setSourceAttachment(null)
+    setActiveWorkspace('geometry')
+  }
 
   return (
     <main className="app-shell">
@@ -18,6 +64,15 @@ export function App() {
             <p>{project.name}</p>
           </div>
         </div>
+
+        <ProjectControls
+          canRedo={history.canRedo}
+          canUndo={history.canUndo}
+          onOpenProject={openProject}
+          onRedo={history.redo}
+          onUndo={history.undo}
+          project={project}
+        />
 
         <nav className="workspace-tabs" aria-label="Workspaces">
           {workspaces.map((item) => (
@@ -36,7 +91,16 @@ export function App() {
 
       <section className="workspace-shell">
         {activeWorkspace === 'geometry' ? (
-          <GeometryWorkspace project={project} setProject={setProject} />
+          <GeometryWorkspace
+            beginProjectTransaction={history.beginTransaction}
+            cancelProjectTransaction={history.cancelTransaction}
+            commitProjectTransaction={history.commitTransaction}
+            onSourceAttached={(assetId, objectUrl) => setSourceAttachment({ assetId, objectUrl })}
+            project={project}
+            replaceProject={history.replaceProject}
+            setProject={history.setProject}
+            sourceUrl={sourceUrl}
+          />
         ) : (
           <>
             <section className="viewport" aria-label="Main viewport">
