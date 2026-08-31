@@ -12,6 +12,7 @@ import { planeDistance, pixelToPlane, planeToPixel } from '../core/coordinates'
 import type { CirclePrimitive, PlanePoint, RglProject } from '../core/model'
 import { Icon } from '../ui/Icon'
 import { PanelHelp } from '../ui/PanelHelp'
+import { GeometryAnalysisPanel } from './GeometryAnalysisPanel'
 
 type GeometryTool = 'select' | 'circle' | 'pan'
 
@@ -82,6 +83,14 @@ export function GeometryWorkspace({
     [project.geometry.primitives],
   )
   const selectedCircle = circles.find((circle) => circle.id === selectedId) ?? null
+  const selectedCenterPixels = source && selectedCircle ? planeToPixel(selectedCircle.center, source.width) : null
+  const originPixels = source && project.geometry.origin ? planeToPixel(project.geometry.origin, source.width) : null
+  const originIsSelected = Boolean(
+    selectedCircle &&
+      project.geometry.origin &&
+      selectedCircle.center.x === project.geometry.origin.x &&
+      selectedCircle.center.y === project.geometry.origin.y,
+  )
 
   useEffect(() => {
     setTool('select')
@@ -117,6 +126,25 @@ export function GeometryWorkspace({
       },
     }))
     setSelectedId(null)
+  }
+
+  const setOriginFromSelection = () => {
+    if (!selectedCircle) return
+    setProject((current) => ({
+      ...current,
+      geometry: {
+        ...current.geometry,
+        origin: { ...selectedCircle.center },
+      },
+    }))
+  }
+
+  const clearOrigin = () => {
+    if (!project.geometry.origin) return
+    setProject((current) => {
+      const { origin: _origin, ...geometry } = current.geometry
+      return { ...current, geometry }
+    })
   }
 
   const eventToPlane = (event: ReactPointerEvent<SVGSVGElement>): PlanePoint | null => {
@@ -168,7 +196,6 @@ export function GeometryWorkspace({
           height: image.naturalHeight,
         },
         geometry: {
-          ...current.geometry,
           primitives: [],
         },
       }))
@@ -337,7 +364,6 @@ export function GeometryWorkspace({
   }
 
   const sourcePlane = source ? { width: 1, height: source.height / source.width } : null
-  const selectedCenterPixels = source && selectedCircle ? planeToPixel(selectedCircle.center, source.width) : null
 
   const toolHelp =
     tool === 'select'
@@ -397,6 +423,24 @@ export function GeometryWorkspace({
               viewBox={`0 0 ${source.width} ${source.height}`}
             >
               <image href={sourceUrl} height={source.height} width={source.width} x={0} y={0} />
+
+              {originPixels && (
+                <g className="analysis-origin" aria-hidden="true">
+                  <circle cx={originPixels.x} cy={originPixels.y} r={Math.max(7, source.width * 0.0045)} />
+                  <line
+                    x1={originPixels.x - Math.max(11, source.width * 0.007)}
+                    x2={originPixels.x + Math.max(11, source.width * 0.007)}
+                    y1={originPixels.y}
+                    y2={originPixels.y}
+                  />
+                  <line
+                    x1={originPixels.x}
+                    x2={originPixels.x}
+                    y1={originPixels.y - Math.max(11, source.width * 0.007)}
+                    y2={originPixels.y + Math.max(11, source.width * 0.007)}
+                  />
+                </g>
+              )}
 
               {circles.map((circle) => {
                 if (circle.hidden) return null
@@ -487,7 +531,7 @@ export function GeometryWorkspace({
           <div className="panel-title-row">
             <h2>Geometry</h2>
             <PanelHelp label="Geometry panel help">
-              {toolHelp} Selection measurements appear below.
+              {toolHelp} Analyze can set the selected circle center as a fixed polar origin; angles increase clockwise in image space.
             </PanelHelp>
           </div>
         </div>
@@ -536,6 +580,32 @@ export function GeometryWorkspace({
                 </button>
               </div>
             </div>
+
+            <div className="tool-group">
+              <span className="tool-group-label">Analyze</span>
+              <div className="icon-button-row" role="group" aria-label="Analysis tools">
+                <button
+                  aria-label="Set analysis origin from selection"
+                  className={originIsSelected ? 'icon-button active' : 'icon-button'}
+                  disabled={!selectedCircle}
+                  onClick={setOriginFromSelection}
+                  title="Set origin from selected circle"
+                  type="button"
+                >
+                  <Icon name="origin" />
+                </button>
+                <button
+                  aria-label="Clear analysis origin"
+                  className="icon-button"
+                  disabled={!project.geometry.origin}
+                  onClick={clearOrigin}
+                  title="Clear analysis origin"
+                  type="button"
+                >
+                  <Icon name="clear" />
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -566,6 +636,14 @@ export function GeometryWorkspace({
             <p>No circle selected.</p>
           )}
         </section>
+
+        {selectedCircle && (
+          <GeometryAnalysisPanel
+            circles={circles}
+            origin={project.geometry.origin}
+            selectedCircle={selectedCircle}
+          />
+        )}
       </aside>
     </>
   )
