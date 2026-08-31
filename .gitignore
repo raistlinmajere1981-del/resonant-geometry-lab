@@ -1,0 +1,25 @@
+# Node
+node_modules/
+web/dist/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Local research data
+projects/
+raw/
+outputs/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+.directory
+
+# Environment
+.env
+.env.*
+!.env.example
