@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { RglProject } from './model'
 import {
   beginProjectTransaction,
+  cancelProjectTransaction,
   commitProject,
   commitProjectTransaction,
   createProjectHistory,
@@ -52,6 +53,20 @@ describe('project history', () => {
 
     history = undoProject(history)
     expect(history.present.geometry.primitives[0]).toMatchObject({ radius: 0.1 })
+  })
+
+  it('keeps undo inert during a live gesture and can cancel back to its baseline', () => {
+    let history = createProjectHistory(makeProject('A', 0.1))
+    history = beginProjectTransaction(history)
+    history = replaceProject(history, makeProject('A', 0.4))
+
+    const duringGesture = history
+    history = undoProject(history)
+    expect(history).toBe(duringGesture)
+
+    history = cancelProjectTransaction(history)
+    expect(history.present.geometry.primitives[0]).toMatchObject({ radius: 0.1 })
+    expect(history.past).toHaveLength(0)
   })
 
   it('clears undo and redo state when a project is opened', () => {
