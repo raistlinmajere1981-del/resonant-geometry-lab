@@ -4,6 +4,7 @@ export type IconName =
   | 'pan'
   | 'open'
   | 'info'
+  | 'help'
   | 'fit'
   | 'trash'
 
@@ -62,6 +63,14 @@ export function Icon({ name, size = 18 }: IconProps) {
           <circle cx="12" cy="12" r="8.2" />
           <path d="M12 10.8v5" />
           <circle cx="12" cy="7.8" r=".9" fill="currentColor" stroke="none" />
+        </svg>
+      )
+    case 'help':
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="8.2" />
+          <path d="M9.8 9.2a2.3 2.3 0 1 1 3.4 2c-.8.4-1.2.9-1.2 1.8v.4" />
+          <circle cx="12" cy="16.8" r=".9" fill="currentColor" stroke="none" />
         </svg>
       )
     case 'fit':
