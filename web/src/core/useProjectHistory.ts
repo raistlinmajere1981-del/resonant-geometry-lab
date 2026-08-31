@@ -64,6 +64,8 @@ export function useProjectHistory(initialProject: RglProject): ProjectHistoryCon
     setHistory((current) => resetProjectHistory(current, project))
   }, [])
 
+  const transactionActive = Boolean(history.transactionStart)
+
   return {
     project: history.present,
     setProject,
@@ -74,7 +76,7 @@ export function useProjectHistory(initialProject: RglProject): ProjectHistoryCon
     undo,
     redo,
     reset,
-    canUndo: history.past.length > 0 || Boolean(history.transactionStart),
-    canRedo: history.future.length > 0 && !history.transactionStart,
+    canUndo: history.past.length > 0 && !transactionActive,
+    canRedo: history.future.length > 0 && !transactionActive,
   }
 }
