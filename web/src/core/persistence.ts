@@ -95,13 +95,18 @@ export function parseProjectJson(text: string): RglProject {
   if (value.schemaVersion !== 1) throw new Error('Unsupported project schema version.')
   if (typeof value.id !== 'string' || value.id.length === 0) throw new Error('Project id is missing.')
   if (typeof value.name !== 'string' || value.name.length === 0) throw new Error('Project name is missing.')
-  if (!isRecord(value.geometry) || !Array.isArray(value.geometry.primitives)) {
+
+  const geometry = value.geometry
+  if (!isRecord(geometry) || !Array.isArray(geometry.primitives)) {
     throw new Error('Project geometry is missing.')
   }
-  if (!value.geometry.primitives.every(isGeometryPrimitive)) {
+
+  const primitives = geometry.primitives
+  const origin = geometry.origin
+  if (!primitives.every(isGeometryPrimitive)) {
     throw new Error('Project contains invalid geometry primitives.')
   }
-  if (value.geometry.origin !== undefined && !isPlanePoint(value.geometry.origin)) {
+  if (origin !== undefined && !isPlanePoint(origin)) {
     throw new Error('Project geometry origin is invalid.')
   }
 
@@ -113,8 +118,8 @@ export function parseProjectJson(text: string): RglProject {
     name: value.name,
     ...(sourceImage ? { sourceImage } : {}),
     geometry: {
-      ...(value.geometry.origin ? { origin: value.geometry.origin } : {}),
-      primitives: value.geometry.primitives as GeometryPrimitive[],
+      ...(origin ? { origin } : {}),
+      primitives: primitives as GeometryPrimitive[],
     },
   }
 }
