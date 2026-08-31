@@ -74,8 +74,7 @@ export const cancelProjectTransaction = (state: ProjectHistoryState): ProjectHis
 }
 
 export const undoProject = (state: ProjectHistoryState): ProjectHistoryState => {
-  if (state.transactionStart) return cancelProjectTransaction(state)
-  if (state.past.length === 0) return state
+  if (state.transactionStart || state.past.length === 0) return state
 
   const previous = state.past[state.past.length - 1]
   return {
