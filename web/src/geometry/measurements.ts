@@ -12,7 +12,7 @@ export type PolarMeasurement = {
   dx: number
   dy: number
   distance: number
-  angleDegrees: number
+  angleDegrees?: number
 }
 
 export type CirclePairMeasurement = {
@@ -22,6 +22,7 @@ export type CirclePairMeasurement = {
   radiusRatio: number
 }
 
+const ORIGIN_EPSILON = 1e-9
 const normalizeAngleDegrees = (angle: number) => ((angle % 360) + 360) % 360
 
 export function measureCircle(circle: CirclePrimitive): CircleMetrics {
@@ -36,16 +37,20 @@ export function measureCircle(circle: CirclePrimitive): CircleMetrics {
 /**
  * Image-space polar measurement. Source-plane y increases downward, so angles
  * increase clockwise from the positive x axis: right=0°, down=90°.
+ * A point coincident with the origin has no meaningful polar angle.
  */
 export function measureFromOrigin(point: PlanePoint, origin: PlanePoint): PolarMeasurement {
   const dx = point.x - origin.x
   const dy = point.y - origin.y
+  const distance = Math.hypot(dx, dy)
 
   return {
     dx,
     dy,
-    distance: Math.hypot(dx, dy),
-    angleDegrees: normalizeAngleDegrees((Math.atan2(dy, dx) * 180) / Math.PI),
+    distance,
+    ...(distance > ORIGIN_EPSILON
+      ? { angleDegrees: normalizeAngleDegrees((Math.atan2(dy, dx) * 180) / Math.PI) }
+      : {}),
   }
 }
 

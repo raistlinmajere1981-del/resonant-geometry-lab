@@ -31,12 +31,20 @@ RGL is developed through small checkpoints. Each checkpoint is locally typecheck
 - origin-relative polar measurements
 - nearest-circle relations
 
-**B — Radial structure — next**
+**B1 — Radial ordering — current**
 
-- origin-centered ordering
-- radial bands
-- angular gaps
-- repeated interval/sequence groundwork
+- document-wide origin-centered radial ordering
+- clockwise angular ordering
+- angular gap sequence including wrap-around
+- selected-circle radial/angular rank and immediate neighbors
+- no grouping/clustering assumptions yet
+
+**B2 — Radial band candidates — next**
+
+- explicit grouping tolerance
+- radial bands / ring candidates
+- band residuals
+- repeated radial interval/sequence groundwork
 
 **C — Symmetry**
 
