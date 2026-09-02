@@ -1,4 +1,5 @@
 import type { GeometryPrimitive, PlanePoint, RglProject, SourceImage } from './model'
+import type { JsonValue, ModelDocument, ModelParameters } from './modelDocuments'
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -62,6 +63,49 @@ const isGeometryPrimitive = (value: unknown): value is GeometryPrimitive => {
   }
 }
 
+const isJsonValue = (value: unknown): value is JsonValue => {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return true
+  if (isFiniteNumber(value)) return true
+  if (Array.isArray(value)) return value.every(isJsonValue)
+  return isRecord(value) && Object.values(value).every(isJsonValue)
+}
+
+const isModelParameters = (value: unknown): value is ModelParameters =>
+  isRecord(value) && Object.values(value).every(isJsonValue)
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === 'string' && value.length > 0
+
+const isStringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every(isNonEmptyString)
+
+const isModelBinding = (value: unknown) =>
+  isRecord(value) &&
+  isNonEmptyString(value.id) &&
+  isNonEmptyString(value.role) &&
+  isStringArray(value.geometryPrimitiveIds) &&
+  value.geometryPrimitiveIds.length > 0 &&
+  (value.parameters === undefined || isModelParameters(value.parameters))
+
+const isModelConstraint = (value: unknown) =>
+  isRecord(value) &&
+  isNonEmptyString(value.id) &&
+  isNonEmptyString(value.kind) &&
+  (value.bindingIds === undefined || isStringArray(value.bindingIds)) &&
+  (value.parameters === undefined || isModelParameters(value.parameters))
+
+const isModelDocument = (value: unknown): value is ModelDocument =>
+  isRecord(value) &&
+  isNonEmptyString(value.id) &&
+  isNonEmptyString(value.family) &&
+  isNonEmptyString(value.modelType) &&
+  hasOptionalString(value.name) &&
+  Array.isArray(value.bindings) &&
+  value.bindings.every(isModelBinding) &&
+  isModelParameters(value.parameters) &&
+  Array.isArray(value.constraints) &&
+  value.constraints.every(isModelConstraint)
+
 const normalizeSourceImage = (value: unknown): SourceImage | undefined => {
   if (value === undefined) return undefined
   if (!isRecord(value)) throw new Error('Invalid source image metadata.')
@@ -110,6 +154,11 @@ export function parseProjectJson(text: string): RglProject {
     throw new Error('Project geometry origin is invalid.')
   }
 
+  const models = value.models
+  if (models !== undefined && (!Array.isArray(models) || !models.every(isModelDocument))) {
+    throw new Error('Project contains invalid model documents.')
+  }
+
   const sourceImage = normalizeSourceImage(value.sourceImage)
 
   return {
@@ -121,6 +170,7 @@ export function parseProjectJson(text: string): RglProject {
       ...(origin ? { origin } : {}),
       primitives: primitives as GeometryPrimitive[],
     },
+    ...(models !== undefined ? { models: models as ModelDocument[] } : {}),
   }
 }
 
@@ -141,6 +191,7 @@ export function serializeProject(project: RglProject): string {
           }
         : {}),
       geometry: project.geometry,
+      ...(project.models !== undefined ? { models: project.models } : {}),
     },
     null,
     2,
