@@ -13,6 +13,7 @@ const project: RglProject = {
     height: 3000,
   },
   geometry: {
+    origin: { x: 0.5, y: 0.25 },
     primitives: [
       {
         id: 'circle-1',

@@ -297,6 +297,22 @@ p {
   pointer-events: none;
 }
 
+.analysis-origin {
+  pointer-events: none;
+}
+
+.analysis-origin circle,
+.analysis-origin line {
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: #f0a96b;
+  stroke-width: 1.7;
+  vector-effect: non-scaling-stroke;
+}
+
+.analysis-origin circle {
+  stroke-dasharray: 3 3;
+}
+
 .annotation-circle {
   fill: rgba(80, 180, 255, 0.08);
   stroke: #72c5ff;
@@ -476,11 +492,6 @@ p {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-}
-
-.tool-help {
-  min-height: 36px;
-  margin-top: 12px;
 }
 
 .measurement-list {

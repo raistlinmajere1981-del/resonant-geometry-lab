@@ -2,6 +2,8 @@ export type IconName =
   | 'select'
   | 'circle'
   | 'pan'
+  | 'origin'
+  | 'clear'
   | 'open'
   | 'save'
   | 'undo'
@@ -51,6 +53,20 @@ export function Icon({ name, size = 18 }: IconProps) {
           <path d="M10.6 10.4V5.9a1.4 1.4 0 0 1 2.8 0v4.5" />
           <path d="M13.4 10.6V7.1a1.4 1.4 0 0 1 2.8 0v4.6" />
           <path d="M16.2 11.5V9.2a1.4 1.4 0 0 1 2.8 0v4.5c0 4-2.4 6.5-6.2 6.5h-.7c-2.1 0-3.5-.7-4.8-2.2l-3-3.6a1.5 1.5 0 0 1 2.1-2.1l1.4 1.1" />
+        </svg>
+      )
+    case 'origin':
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="6.5" />
+          <circle cx="12" cy="12" r="2" />
+          <path d="M12 2.8v2.7M12 18.5v2.7M2.8 12h2.7M18.5 12h2.7" />
+        </svg>
+      )
+    case 'clear':
+      return (
+        <svg {...common}>
+          <path d="M6.2 6.2 17.8 17.8M17.8 6.2 6.2 17.8" />
         </svg>
       )
     case 'open':

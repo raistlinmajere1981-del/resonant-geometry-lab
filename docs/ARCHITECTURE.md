@@ -45,6 +45,23 @@ The first interactive editor only implements circles. Supporting more kinds in t
 
 Derived measurements such as diameter, angle from origin, pairwise ratio or symmetry residual are not stored as authoritative primitive fields. They are recomputed from geometry to avoid stale results.
 
+## Geometry analysis contract
+
+Geometry Analysis begins with small pure TypeScript measurement functions that consume the authoritative project geometry and return derived values. React components display those results but do not own the calculations.
+
+The first analysis reference is `geometry.origin`. It is an explicit user-edited source-plane point, persisted with the project and tracked by undo/redo. Setting the origin from a selected circle copies that circle's current center; it does not create a live link to the circle, so later primitive edits cannot silently move the analysis reference.
+
+Polar measurements use image-space orientation:
+
+- positive x points right,
+- positive y points down,
+- `0°` points right,
+- angles increase clockwise (`90°` points down).
+
+This convention matches the source image coordinate system and must remain explicit when later symmetry, radial-profile and sequence analyses are added.
+
+Initial derived circle measurements include area and circumference. Initial relational measurements include distance from origin, polar angle, nearest-circle center distance, edge gap and directional radius ratio. These values remain derived outputs and are not persisted into primitives.
+
 ## Workspace contract
 
 The initial workspaces are Geometry, Resonance and Compare. A workspace provides:
@@ -116,7 +133,7 @@ Included in history:
 - primitive creation/deletion,
 - primitive geometry edits,
 - source metadata changes,
-- future authoritative project parameters.
+- analysis origin and future authoritative project parameters.
 
 Excluded from history:
 
