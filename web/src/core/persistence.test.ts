@@ -34,6 +34,33 @@ describe('project persistence', () => {
     expect(json).not.toContain('objectUrl')
   })
 
+  it('round-trips generic model documents without changing geometry primitives', () => {
+    const modeledProject: RglProject = {
+      ...project,
+      models: [
+        {
+          id: 'model-1',
+          family: 'kinematics',
+          modelType: 'mechanism-sketch',
+          name: 'Candidate mechanism',
+          bindings: [
+            {
+              id: 'rotor-a',
+              geometryPrimitiveIds: ['circle-1'],
+              role: 'rotor',
+              parameters: { phaseDegrees: 0 },
+            },
+          ],
+          parameters: { speedScale: 1 },
+          constraints: [],
+        },
+      ],
+    }
+
+    expect(parseProjectJson(serializeProject(modeledProject))).toEqual(modeledProject)
+    expect(modeledProject.geometry.primitives[0]).not.toHaveProperty('role')
+  })
+
   it('rejects unsupported schema versions', () => {
     expect(() => parseProjectJson('{"schemaVersion":2,"id":"x","name":"x","geometry":{"primitives":[]}}')).toThrow(
       'Unsupported project schema version.',
@@ -46,6 +73,14 @@ describe('project persistence', () => {
         '{"schemaVersion":1,"id":"x","name":"x","geometry":{"primitives":[{"id":"c","kind":"circle","center":{"x":0,"y":0},"radius":"bad"}]}}',
       ),
     ).toThrow('Project contains invalid geometry primitives.')
+  })
+
+  it('rejects invalid model documents', () => {
+    expect(() =>
+      parseProjectJson(
+        '{"schemaVersion":1,"id":"x","name":"x","geometry":{"primitives":[]},"models":[{"id":"m","family":"kinematics","modelType":"x","bindings":[{"id":"b","geometryPrimitiveIds":"bad","role":"rotor"}],"parameters":{},"constraints":[]}]}',
+      ),
+    ).toThrow('Project contains invalid model documents.')
   })
 
   it('uses the project name for the download filename', () => {

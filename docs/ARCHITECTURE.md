@@ -2,14 +2,15 @@
 
 ## Purpose
 
-RGL is an analysis workbench, not a crop-circle-specific editor. Its central contract is a reusable geometric document that can be rendered and analysed through multiple views.
+RGL is an analysis workbench, not a crop-circle-specific editor and not a tool for proving one preferred interpretation. Its central contract is a reusable observed geometry that can be analysed under multiple mathematical and generative model families.
 
-The application is split into four concerns:
+The application is split into five concerns:
 
-1. **Project model** — source metadata, source-plane geometry and future analysis references.
+1. **Project model** — source metadata, source-plane geometry and optional semantic model documents.
 2. **Workspace shell** — stable application frame and context-sensitive panels.
-3. **View adapters** — 2D image/vector views and later Babylon.js 3D views.
-4. **Analysis engines** — geometry and resonance calculations that do not depend on React components.
+3. **View adapters** — 2D image/vector views and later simulation/3D views.
+4. **Analysis engines** — derived structural measurements that do not mutate authoritative geometry.
+5. **Model/simulation engines** — resonance, kinematics and future generative models behind a common engine boundary.
 
 ## Coordinate contract
 
@@ -45,6 +46,8 @@ The first interactive editor only implements circles. Supporting more kinds in t
 
 Derived measurements such as diameter, angle from origin, pairwise ratio or symmetry residual are not stored as authoritative primitive fields. They are recomputed from geometry to avoid stale results.
 
+Semantic interpretations also do not belong on `GeometryPrimitive`. A circle remains a circle even if one model interprets it as a resonant boundary and another interprets it as a rotor or orbit.
+
 ## Geometry analysis contract
 
 Geometry Analysis begins with small pure TypeScript measurement functions that consume the authoritative project geometry and return derived values. React components display those results but do not own the calculations.
@@ -62,16 +65,75 @@ This convention matches the source image coordinate system and must remain expli
 
 Initial derived circle measurements include area and circumference. Initial relational measurements include distance from origin, polar angle, nearest-circle center distance, edge gap and directional radius ratio. These values remain derived outputs and are not persisted into primitives.
 
+## Model document contract
+
+Observed geometry and candidate generative models are separate authoritative layers.
+
+A project may contain optional `ModelDocument` records. A model document has:
+
+- a model `family` such as `resonance`, `kinematics` or a future family,
+- a model-specific `modelType`,
+- geometry-to-model `bindings`,
+- model parameters,
+- constraints.
+
+Bindings refer to geometry primitive IDs and assign a semantic role without modifying those primitives. A future kinematics model could therefore express mappings such as:
+
+```text
+circle C17 -> rotor
+point P3   -> axis
+line L4    -> rigid-link
+arc A2     -> constrained-path
+```
+
+The same geometry can simultaneously participate in multiple model documents with different meanings. Model roles are strings owned by the model family rather than a growing union on the geometry core.
+
+Bindings are hypotheses, not observations. Automatic tools may eventually propose bindings, but authoritative model construction remains explicit and human-controlled.
+
+## Simulation contract
+
+All model families use the same high-level engine boundary:
+
+```text
+Observed Geometry + ModelDocument
+              |
+              v
+          ModelAdapter
+              |
+              v
+       SimulationResult
+```
+
+`ModelAdapter` owns family-specific validation and simulation. The core contract does not choose a numerical implementation. A resonance adapter may later call Python/NumPy/SciPy; a kinematics adapter may later use TypeScript, Python, Rapier, Havok or another solver.
+
+`SimulationResult` is renderer-independent. It carries model state frames, summary values and diagnostics. Rendering code must consume simulation output rather than becoming the source of physical truth.
+
+The first shared reference validator only checks structural links such as missing geometry primitive IDs or constraints that reference missing model bindings. Family-specific physical validation belongs to the relevant adapter.
+
+### Reserved model families
+
+**Resonance** is the first planned implementation family. Initial model types are plate/Chladni and circular membrane, with water/interference candidates later.
+
+**Kinematics** is a reserved future family for neutrally testing whether observed geometry can support a coherent mechanism interpretation. Candidate semantic roles may include pivot, axis, rotor, rotating mass, rigid link/arm, orbit/track, eccentric offset, spring and other constraints.
+
+A future kinematics engine should begin with kinematic consistency rather than extraordinary energy claims. Candidate outputs include paths, eccentricity, angular relationships, phase locking, relative rotation ratios, collisions, periodicity, return periods, constraint violations and velocity/acceleration profiles. Torque and energy accounting belong only after the kinematic layer is coherent.
+
+Sensitivity analysis is part of the future model-evaluation contract: measured radius/spacing/angle inputs should be perturbable (for example ±1%, ±2%, ±5%) to determine whether a behavior survives small geometry changes. Future null/randomized models should provide the baseline needed to interpret apparent fine tuning statistically.
+
 ## Workspace contract
 
-The initial workspaces are Geometry, Resonance and Compare. A workspace provides:
+The visible initial workspaces remain Geometry, Resonance and Compare. Reserving another model family does **not** create a fourth permanent workspace.
+
+A workspace provides:
 
 - a viewport adapter,
 - a context panel,
 - optional selection tools,
-- optional analysis commands.
+- optional analysis/model commands.
 
 The outer shell must stay stable as capabilities are added. New analyses should add tools/panels or view adapters rather than new permanent screen regions.
+
+The visible `Resonance` label may remain during v0.1 because resonance is the first implemented model family. Its internal implementation must use the generic model/simulation contracts rather than creating a Resonance-only project format. If multiple model families later need equal UI status, the shell can evolve toward a model-family selector without changing the underlying project or engine contracts.
 
 ## UI density contract
 
@@ -86,33 +148,47 @@ The governing rule is: **information that is not continuously required to do the
 
 ## View adapters
 
-The same model can eventually be presented as:
+The same authoritative data can eventually be presented as:
 
-- source image + 2D overlay,
+- source image + 2D geometry overlay,
 - vector-only geometry,
 - negative-space geometry,
 - graph view,
 - resonance heatmap,
-- Babylon.js 3D surface,
+- 2D mechanism schematic,
+- 2D trajectory/path view,
+- Babylon.js 3D resonance or mechanism view,
 - comparison overlay.
 
-Babylon.js is deliberately isolated to 3D views. It is not used to implement the application UI.
+Simulation views consume the shared `SimulationResult` / model-state boundary. A future kinematics model can therefore feed schematic 2D, trajectory 2D and Babylon 3D views without duplicating the simulation engine.
+
+Babylon.js is deliberately isolated to view adapters. It is not used to implement the application UI and must not become the mandatory physics source. A 3D adapter may display pivots, axes, bodies, links, trails, vectors, phase state, animation controls and camera presets while remaining replaceable independently of the numerical engine.
 
 ## Computation boundary
 
-Simple interactive geometry operations may live in TypeScript so that dragging and measurement remain immediate.
+Simple interactive geometry operations and structural analysis may live in TypeScript so that dragging and measurement remain immediate.
 
-Numerical simulation will later live behind a small local engine boundary. The likely first implementation is Python/NumPy/SciPy because modal analysis and validation are easier to express and test there. The UI will exchange plain JSON/arrays with that engine rather than importing simulation implementation details.
+Numerical model simulation lives behind `ModelAdapter`. The likely first numerical backend is Python/NumPy/SciPy because modal analysis and validation are easy to express and test there. The UI exchanges plain structured data with that engine rather than importing implementation details.
 
-No backend is introduced during Foundation merely to reserve this boundary.
+No physics backend is introduced merely to reserve this boundary. Solver selection happens only when an implemented model demonstrates requirements that justify it.
+
+## Compare contract
+
+Compare evaluates observed geometry against model output without collapsing everything into one authoritative score.
+
+Future model comparisons should expose separate metrics appropriate to the model family. For kinematics these may include center/pivot alignment, radius/length agreement, angular agreement, path agreement, phase/symmetry agreement, topology/connection agreement and sensitivity/stability.
+
+Higher-level ranking may later compare how well different model families explain the same observation, but it must retain residuals, free-parameter counts and metric components so the UI does not imply that a single opaque percentage establishes a mechanism or cause.
 
 ## Persistence
 
 The canonical project format is versioned JSON. Source image files remain separate from geometry data. Temporary browser object URLs are runtime-only and must never be treated as persisted source paths.
 
-The first persistence checkpoint writes a `.rgl.json` file containing project identity, source metadata and authoritative geometry. A source image reference contains a stable project-local `assetId`, filename and pixel dimensions, but not the image bytes or a browser URL.
+The project file contains project identity, source metadata, authoritative geometry and optional model documents. Geometry and model semantics remain separate even though both are persisted.
 
-When a saved project is reopened, its geometry is available immediately while the source image is intentionally disconnected. The user reconnects the external image file; the editor verifies its dimensions before enabling image-based editing. This keeps the project document portable and human-readable without pretending that a browser object URL is a durable file reference.
+A source image reference contains a stable project-local `assetId`, filename and pixel dimensions, but not the image bytes or a browser URL.
+
+When a saved project is reopened, its geometry is available immediately while the source image is intentionally disconnected. The user reconnects the external image file; the editor verifies its dimensions before enabling image-based editing.
 
 A future project package may contain:
 
@@ -122,7 +198,7 @@ source-image.ext
 optional derived outputs
 ```
 
-The persisted format should keep human-edited geometry separate from derived analysis results.
+Derived simulation results do not need to become authoritative project fields. They may be recomputed or stored later as explicitly derived/cache artifacts.
 
 ## History contract
 
@@ -133,14 +209,16 @@ Included in history:
 - primitive creation/deletion,
 - primitive geometry edits,
 - source metadata changes,
-- analysis origin and future authoritative project parameters.
+- analysis origin and future authoritative project parameters,
+- future edits to model documents, bindings and constraints.
 
 Excluded from history:
 
 - selection,
 - panel/popover visibility,
 - viewport pan/zoom,
-- temporary browser source attachments.
+- temporary browser source attachments,
+- transient simulation frames and rendered view state.
 
 Continuous pointer gestures are transactions. A circle move or radius drag may update the live project many times while the pointer moves, but the entire gesture becomes one undo step when it ends. Opening a different project resets undo/redo history rather than mixing two project documents into one timeline.
 
@@ -151,6 +229,7 @@ Keep the dependency set deliberately small:
 - React + TypeScript + Vite for the shell.
 - Native SVG/Canvas for the first 2D editor unless measurement needs prove otherwise.
 - Babylon.js only when the 3D adapter is implemented.
-- Python numerical dependencies only when the Resonance stage begins.
+- Python numerical dependencies only when the first simulation model actually needs them.
+- A rigid-body/physics library is not selected until kinematics requirements are concrete.
 
 A new library should solve a measured problem, not merely provide convenience.

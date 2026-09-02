@@ -1,3 +1,5 @@
+import type { ModelDocument } from './modelDocuments'
+
 export type PlanePoint = {
   x: number
   y: number
@@ -99,6 +101,7 @@ export type RglProject = {
   name: string
   sourceImage?: SourceImage
   geometry: GeometryDocument
+  models?: ModelDocument[]
 }
 
 export const emptyProject = (): RglProject => ({
