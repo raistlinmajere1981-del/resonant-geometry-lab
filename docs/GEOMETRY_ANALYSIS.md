@@ -16,7 +16,7 @@ Complete:
 
 ## Checkpoint B1 — radial ordering
 
-Current checkpoint:
+Complete:
 
 - derive a document-wide polar list from visible circles and the explicit origin
 - stable radial ordering by center distance
@@ -26,19 +26,28 @@ Current checkpoint:
 - selected-circle radial rank, angular rank, inner/outer radial neighbors and adjacent angular gaps
 - plain result objects suitable for later export/analysis without persisting derived ranks or gaps into primitives
 
-No clustering tolerance is introduced here. B1 exposes the measured ordering before deciding how circles should be grouped.
+B1 intentionally introduced no clustering tolerance. It exposes the measured ordering before deciding how circles should be grouped.
 
 ## Checkpoint B2 — radial band candidates
 
-Planned only after B1 is locally verified:
+Current checkpoint:
 
-- derived radial band / ring candidates
-- explicit, inspectable grouping tolerance rather than a hidden heuristic
-- band membership and residual-to-band values
-- repeated radial interval / sequence groundwork
-- later optional angular/spoke grouping if the data justifies it
+- derived radial band / ring candidates from the stable B1 radial ordering
+- explicit absolute source-plane tolerance supplied to the analysis function
+- deterministic greedy grouping over radial order
+- a circle joins the current candidate only when every member remains within tolerance of the candidate's updated mean radius
+- band mean radius, min/max radius, span, maximum residual and RMS residual
+- selected-circle signed residual and candidate membership
+- tolerance carried in the derived result so later exports can state exactly how the grouping was produced
+- compact transient tolerance control in the context panel; changing it does not modify geometry or undo/redo history
 
-Band candidates remain derived hypotheses. They must not silently rewrite or label observed primitives.
+The first UI default is `0.005` source-plane units, equivalent to 0.5% of source width. This is a starting control value, not a claim that 0.005 is the statistically correct tolerance.
+
+The algorithm deliberately does not use simple adjacent-gap chaining because a sequence of individually small gaps can otherwise merge points whose overall radial spread is large. It also does not search for an 'optimal' tolerance. Sensitivity to tolerance and null/randomized baselines belong to later analysis work.
+
+Band candidates remain derived hypotheses. They never rewrite or label observed primitives.
+
+Repeated radial interval/sequence analysis and optional angular/spoke grouping remain later work after B2 is verified.
 
 ## Checkpoint C — symmetry
 
