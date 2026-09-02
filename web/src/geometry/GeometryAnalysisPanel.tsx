@@ -32,7 +32,10 @@ export function GeometryAnalysisPanel({ circles, origin, selectedCircle }: Geome
               <div><span>Origin Δx</span><strong>{format(polar.dx)}</strong></div>
               <div><span>Origin Δy</span><strong>{format(polar.dy)}</strong></div>
               <div><span>Radial distance</span><strong>{format(polar.distance)}</strong></div>
-              <div><span>Polar angle</span><strong>{polar.angleDegrees.toFixed(2)}°</strong></div>
+              <div>
+                <span>Polar angle</span>
+                <strong>{polar.angleDegrees === undefined ? 'center' : `${polar.angleDegrees.toFixed(2)}°`}</strong>
+              </div>
             </>
           )}
 
