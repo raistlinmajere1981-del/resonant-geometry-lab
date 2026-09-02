@@ -4,6 +4,7 @@ import { PanelHelp } from '../ui/PanelHelp'
 import { findNearestCircle, measureCircle, measureFromOrigin } from './measurements'
 import { buildRadialBandCandidates, radialBandForCircle } from './radialBands'
 import { buildRadialStructure, radialContextForCircle } from './radialStructure'
+import './RadialBands.css'
 
 type GeometryAnalysisPanelProps = {
   circles: readonly CirclePrimitive[]
