@@ -28,6 +28,14 @@ describe('geometry measurements', () => {
     expect(measureFromOrigin({ x: 0.5, y: 0.25 }, origin).angleDegrees).toBeCloseTo(270)
   })
 
+  it('leaves polar angle undefined when the point coincides with the origin', () => {
+    const origin = { x: 0.5, y: 0.5 }
+    const measurement = measureFromOrigin(origin, origin)
+
+    expect(measurement.distance).toBe(0)
+    expect(measurement.angleDegrees).toBeUndefined()
+  })
+
   it('measures pair distance, edge gap and directional radius ratio', () => {
     const result = measureCirclePair(circle('a', 0, 0, 0.1), circle('b', 0.5, 0, 0.2))
 
