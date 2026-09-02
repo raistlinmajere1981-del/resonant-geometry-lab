@@ -1,0 +1,50 @@
+.analysis-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.analysis-section-heading h3 {
+  margin-bottom: 0;
+}
+
+.analysis-parameter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.analysis-parameter-row > span {
+  color: #808a98;
+  font-size: 11px;
+}
+
+.analysis-number-input {
+  width: 92px;
+  padding: 6px 8px;
+  border: 1px solid #343b45;
+  border-radius: 6px;
+  color: #d8dde4;
+  background: #11151a;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.analysis-number-input:focus {
+  border-color: #718197;
+  outline: none;
+}
+
+.analysis-parameter-meta {
+  margin-top: 4px;
+  color: #65707f;
+  font-size: 10px;
+  text-align: right;
+}
+
+.band-measurements {
+  margin-top: 12px;
+}
