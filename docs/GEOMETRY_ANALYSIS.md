@@ -30,7 +30,7 @@ B1 intentionally introduced no clustering tolerance. It exposes the measured ord
 
 ## Checkpoint B2 — radial band candidates
 
-Current checkpoint:
+Complete:
 
 - derived radial band / ring candidates from the stable B1 radial ordering
 - explicit absolute source-plane tolerance supplied to the analysis function
@@ -47,16 +47,35 @@ The algorithm deliberately does not use simple adjacent-gap chaining because a s
 
 Band candidates remain derived hypotheses. They never rewrite or label observed primitives.
 
-Repeated radial interval/sequence analysis and optional angular/spoke grouping remain later work after B2 is verified.
+Repeated radial interval/sequence analysis and optional angular/spoke grouping remain later work.
 
-## Checkpoint C — symmetry
+## Checkpoint C1 — rotational symmetry candidates
 
-Planned after the radial structure contract is stable:
+Current checkpoint:
 
-- candidate rotational orders
-- rotational residuals rather than a single match percentage
-- reflection-axis candidates
-- explicit tolerance and confidence inputs
+- user-selected rotational order `n >= 2`
+- rotate the visible non-central circle set by `360 / n` around the explicit analysis origin
+- compare the rotated set back to the observed set in both directions with deterministic nearest-neighbor set residuals
+- central circles are reported but excluded from rotational scoring because their centers are invariant under every order
+- center RMS and maximum source-plane residual
+- angular RMS in degrees
+- radial-distance RMS
+- circle-radius RMS so a center-perfect pattern can still reveal unequal circle sizes
+- unique-match coverage to expose repeated nearest-target reuse
+- no combined probability, confidence or symmetry percentage
+
+The UI evaluates only the explicitly selected order rather than automatically ranking all possible orders. This avoids quietly treating raw center residual as an order-selection score; higher orders use smaller rotation steps and can have different geometric baselines even in non-symmetric data.
+
+C1 uses set residuals rather than claiming a one-to-one correspondence solver. A later checkpoint may add assignment-based matching or null/randomized baselines if evidence shows that they improve interpretation.
+
+## Checkpoint C2 — reflection symmetry
+
+Planned only after C1 is locally verified:
+
+- candidate reflection axes
+- center/radius residual components
+- explicit axis parameterization
+- no opaque combined match percentage
 
 ## Checkpoint D — negative space
 

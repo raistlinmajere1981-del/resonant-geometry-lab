@@ -4,6 +4,7 @@ import { PanelHelp } from '../ui/PanelHelp'
 import { findNearestCircle, measureCircle, measureFromOrigin } from './measurements'
 import { buildRadialBandCandidates, radialBandForCircle } from './radialBands'
 import { buildRadialStructure, radialContextForCircle } from './radialStructure'
+import { evaluateRotationalSymmetry } from './rotationalSymmetry'
 import './RadialBands.css'
 
 type GeometryAnalysisPanelProps = {
@@ -17,6 +18,7 @@ const format = (value: number, digits = 5) => value.toFixed(digits)
 
 export function GeometryAnalysisPanel({ circles, origin, selectedCircle }: GeometryAnalysisPanelProps) {
   const [bandTolerance, setBandTolerance] = useState(DEFAULT_BAND_TOLERANCE)
+  const [symmetryOrder, setSymmetryOrder] = useState(2)
   const circleMetrics = measureCircle(selectedCircle)
   const polar = origin ? measureFromOrigin(selectedCircle.center, origin) : null
   const nearest = findNearestCircle(selectedCircle, circles)
@@ -31,6 +33,15 @@ export function GeometryAnalysisPanel({ circles, origin, selectedCircle }: Geome
   const bandContext = bandAnalysis
     ? radialBandForCircle(bandAnalysis, selectedCircle.id)
     : null
+  const symmetryEligibleCount = radialStructure?.angularOrder.length ?? 0
+  const activeSymmetryOrder = Math.min(Math.max(2, symmetryOrder), Math.max(2, symmetryEligibleCount))
+  const symmetryCandidate = useMemo(
+    () =>
+      origin && symmetryEligibleCount >= 2
+        ? evaluateRotationalSymmetry(circles, origin, activeSymmetryOrder)
+        : null,
+    [circles, origin, symmetryEligibleCount, activeSymmetryOrder],
+  )
 
   return (
     <>
@@ -146,6 +157,51 @@ export function GeometryAnalysisPanel({ circles, origin, selectedCircle }: Geome
             <div><span>Max residual</span><strong>{format(bandContext.band.maxResidual)}</strong></div>
             <div><span>RMS residual</span><strong>{format(bandContext.band.rmsResidual)}</strong></div>
             <div><span>Band span</span><strong>{format(bandContext.band.span)}</strong></div>
+          </div>
+        </section>
+      )}
+
+      {symmetryCandidate && (
+        <section className="context-section geometry-analysis-section">
+          <div className="analysis-section-heading">
+            <h3>Rotational symmetry</h3>
+            <PanelHelp label="Rotational symmetry help">
+              Rotate the observed circle set by 360/order and compare it back to the observation. Residual components stay separate; no single symmetry score is inferred.
+            </PanelHelp>
+          </div>
+
+          <label className="analysis-parameter-row">
+            <span>Candidate order</span>
+            <input
+              aria-label="Rotational symmetry candidate order"
+              className="analysis-number-input"
+              max={symmetryEligibleCount}
+              min="2"
+              onChange={(event) => {
+                const value = event.currentTarget.valueAsNumber
+                if (Number.isInteger(value) && value >= 2) setSymmetryOrder(value)
+              }}
+              step="1"
+              type="number"
+              value={activeSymmetryOrder}
+            />
+          </label>
+          <div className="analysis-parameter-meta">
+            orders 2–{symmetryEligibleCount} · central circles do not constrain rotation
+          </div>
+
+          <div className="measurement-list band-measurements">
+            <div><span>Rotation step</span><strong>{symmetryCandidate.stepDegrees.toFixed(2)}°</strong></div>
+            <div><span>Samples</span><strong>{symmetryCandidate.sampleCount}</strong></div>
+            <div><span>Center RMS</span><strong>{format(symmetryCandidate.centerRms)}</strong></div>
+            <div><span>Center max</span><strong>{format(symmetryCandidate.centerMax)}</strong></div>
+            <div><span>Angular RMS</span><strong>{symmetryCandidate.angularRmsDegrees.toFixed(2)}°</strong></div>
+            <div><span>Radial RMS</span><strong>{format(symmetryCandidate.radialRms)}</strong></div>
+            <div><span>Circle radius RMS</span><strong>{format(symmetryCandidate.circleRadiusRms)}</strong></div>
+            <div><span>Unique coverage</span><strong>{(symmetryCandidate.uniqueMatchCoverage * 100).toFixed(1)}%</strong></div>
+            {symmetryCandidate.centralCircleCount > 0 && (
+              <div><span>Central ignored</span><strong>{symmetryCandidate.centralCircleCount}</strong></div>
+            )}
           </div>
         </section>
       )}
