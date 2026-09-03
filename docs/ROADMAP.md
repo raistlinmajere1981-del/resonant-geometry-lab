@@ -39,7 +39,7 @@ RGL is developed through small checkpoints. Each checkpoint is locally typecheck
 - selected-circle radial/angular rank and immediate neighbors
 - no grouping/clustering assumptions
 
-**B2 — Radial band candidates — current**
+**B2 — Radial band candidates — complete**
 
 - explicit absolute source-plane grouping tolerance
 - radial band / ring candidates
@@ -47,18 +47,27 @@ RGL is developed through small checkpoints. Each checkpoint is locally typecheck
 - selected-circle candidate membership and residual
 - tolerance remains a visible analysis parameter rather than a hidden heuristic
 
-**C — Symmetry — next after B2 verification**
+**C1 — Rotational symmetry candidates — current**
 
-- rotational symmetry candidates
-- residuals rather than binary labels
-- later reflection symmetry
+- explicit candidate order
+- bidirectional rotated-set residuals
+- center, angular, radial and circle-radius residuals kept separate
+- unique-match coverage
+- central circles excluded from rotational scoring
+- no automatic order ranking or single symmetry percentage
+
+**C2 — Reflection symmetry — next after C1 verification**
+
+- explicit candidate reflection axes
+- residual components rather than binary labels
+- axis parameterization kept inspectable
 
 **D — Negative space**
 
 - occupied/empty region representation
 - negative-space measurements and topology groundwork
 
-Repeated radial interval/sequence analysis, angular/spoke grouping, advanced constant exploration, Voronoi/Delaunay, sequence/phase interpretation and automated structure search remain later Geometry work.
+Repeated radial interval/sequence analysis, angular/spoke grouping, advanced constant exploration, Voronoi/Delaunay, sequence/phase interpretation, null/randomized baselines and automated structure search remain later Geometry work.
 
 ## Model / Simulation layer
 
